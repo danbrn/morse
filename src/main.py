@@ -34,7 +34,8 @@ class Morse:
     def add_to_queue(self, char):
         while True:
             try:
-                self.char_queue.append(char)
+                with self.char_queue_lock:
+                    self.char_queue.append(char)
                 return
             except IndexError:
                 machine.idle()
@@ -50,9 +51,8 @@ class Morse:
         code = ','.join(
             map(lambda x: self.encoding.get(x, ''), list(msg.lower())))
         code = color + code + '^,'
-        with self.char_queue_lock:
-            for c in list(code):
-                self.add_to_queue(c)
+        for c in list(code):
+            self.add_to_queue(c)
 
     def light(self, length):
         pycom.rgbled(self.color)
