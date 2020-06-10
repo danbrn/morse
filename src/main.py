@@ -32,7 +32,7 @@ class Morse:
         pycom.heartbeat(False)
         if pin != 0:
             self.pwm = machine.PWM(0, 1500)
-            self.pwm_channel = pwm.channel(
+            self.pwm_channel = self.pwm.channel(
                 0, pin='P' + str(pin), duty_cycle=0.0)
             self.beep = True
         _thread.start_new_thread(lambda: self.output_loop(), ())
