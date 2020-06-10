@@ -25,10 +25,16 @@ class Morse:
     unit_len = 75
     char_queue = deque((), 2048, 1)
     char_queue_lock = _thread.allocate_lock()
+    beep = False
 
-    def __init__(self):
+    def __init__(self, pin=0):
         print("Morse()")
         pycom.heartbeat(False)
+        if pin != 0:
+            self.pwm = machine.PWM(0, 1500)
+            self.pwm_channel = pwm.channel(
+                0, pin='P' + str(pin), duty_cycle=0.0)
+            self.beep = True
         _thread.start_new_thread(lambda: self.output_loop(), ())
 
     def add_to_queue(self, char):
@@ -39,6 +45,14 @@ class Morse:
                 return
             except IndexError:
                 machine.idle()
+
+    def beep_on(self):
+        if self.beep:
+            self.pwm_channel.duty_cycle(0.5)
+
+    def beep_off(self):
+        if self.beep:
+            self.pwm_channel.duty_cycle(0.0)
 
     def enqueue_message(self, msg, color='W'):
         if msg[0:2] == '!!':
@@ -61,10 +75,14 @@ class Morse:
 
     def output(self, c):
         if c == '.':
+            self.beep_on()
             self.light(self.unit_len)
+            self.beep_off()
             time.sleep_ms(self.unit_len)
         elif c == '-':
+            self.beep_on()
             self.light(3 * self.unit_len)
+            self.beep_off()
             time.sleep_ms(self.unit_len)
         elif c == ',':
             time.sleep_ms(2 * self.unit_len)
